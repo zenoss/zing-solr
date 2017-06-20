@@ -1,0 +1,16 @@
+version: "3"
+services:
+  solr:
+    image: zenoss/zing-solr:dev
+    build: .
+    command: ["init-solr.sh", "solr", "start", "-f", "-cloud"]
+    environment:
+      ZK: zk
+      ZK_CHROOT: /solr
+      ZK_HOST: zk/solr
+      FS_DEFAULTFS: hdfs://hdfs-namenode:8020
+      SOLR_OPTS: >-
+        -Dsolr.directoryFactory=HdfsDirectoryFactory
+        -Dsolr.hdfs.home=hdfs://hdfs-namenode:8020/solr
+        -Dsolr.hdfs.confdir=/opt/solr/server/etc/hadoop
+        -Dsolr.lock.type=hdfs
