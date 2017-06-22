@@ -1,7 +1,7 @@
 version: "3"
 services:
   solr:
-    image: zenoss/zing-solr:dev
+    image: ${CI_IMAGE:-zenoss/zing-solr:dev}
     build: .
     command: ["init-solr.sh", "solr", "start", "-f", "-cloud"]
     environment:
