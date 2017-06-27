@@ -57,11 +57,21 @@ init_collection () {
 }
 
 
-init_zk
+if [ -n "$ZK_HOST" ]; then
+	# Stand-alone zookeeper.
+	#   Initialize zk chroot, give solr a chance to start up,
+    #   then initialize collections as a background process
+	init_zk
+	(sleep 10; init_collection metric-catalog) &
+else
+	# Embedded Zookeeper.
+	# Embedded zk is started when we start solr, so we need to
+	#   give solr a chance to start before we init zk chroot, after
+	#   which we initialize collections.
+	(set -e; sleep 10; ZK=localhost:9983 init_zk; init_collection metric-catalog) &
+fi
 
-# Initialize collection as a background process; it will complete after
-#   Solr is up and running
-(sleep 10 ; init_collection metric-catalog) &
 
+# Start solr
 exec "$@"
 
