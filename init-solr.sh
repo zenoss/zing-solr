@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-
 log () {
     echo $(date "+%y/%m/%d %H:%M:%S") "$1 init_solr.sh: $2"
 }
@@ -7,13 +6,10 @@ log () {
 # Ensure the solr chroot directory in Zookeeper is initialized
 # This command will retry until the chroot directory exists
 init_zk () {
-    if [ -z $ZK ] ; then
-        log ERROR "ZK must be set to the Zookeeper host (e.g., zk)"
-        exit 1
-    elif [ -z $ZK_CHROOT ] ; then
-        log ERROR "ZK_CHROOT must be set to the Zookeeper chroot for Solr (e.g., /solr)"
-        exit 1
-    fi
+    # ZK is comma-separated list of hosts.  e.g., zk1,zk2,zk3
+    ZK_NODES=$1
+    # ZK_CHROOT is the zk chroot for solr.  e.g., /solr
+    ZK_CHROOT=$2
     while true; do
         # In the cases we want to check for, the makepath command will either
         #   1) Return 0, if it created the path, or
@@ -23,7 +19,7 @@ init_zk () {
         #   we would also like to log it in case of unexpected errors.  Redirect
         #   stderr into a tee process, which sends it to both stderr and stdout;
         #   pipe stdout into grep.
-        server/scripts/cloud-scripts/zkcli.sh -z ${ZK} -cmd makepath ${ZK_CHROOT} \
+        server/scripts/cloud-scripts/zkcli.sh -z ${ZK_NODES} -cmd makepath ${ZK_CHROOT} \
             2> >(tee >(cat >&2)) | grep -q NodeExists
         # Capture the status of the two commands (zkcli and grep) for examination.
         status=(${PIPESTATUS[*]})
@@ -47,30 +43,48 @@ init_zk () {
 # This command will retry until the collection exists.
 init_collection () {
     COLLECTION=$1
-    while true ; do
-    	/opt/solr/bin/solr healthcheck -c $COLLECTION && break
-	    if ! /opt/solr/bin/solr create -c $COLLECTION ; then
+    while ! /opt/solr/bin/solr healthcheck -c $COLLECTION; do
+        if /opt/solr/bin/solr create -c $COLLECTION ; then
+            log INFO "Created Solr collection \"$COLLECTION\""
+        else
             log ERROR "Unable to create Solr collection \"$COLLECTION\""
-		    sleep 10
-	    fi
+            sleep 10
+        fi
     done
+    log INFO "Detected Solr collection \"$COLLECTION\""
 }
 
 
 if [ -n "$ZK_HOST" ]; then
-	# Stand-alone zookeeper.
-	#   Initialize zk chroot, give solr a chance to start up,
-    #   then initialize collections as a background process
-	init_zk
-	(sleep 10; init_collection metric-catalog) &
+    # Stand-alone Zookeeper.
+    # Split the ZK_HOST into nodes and chroot.
+    #  e.g., zk1/solr -> (zk1, solr)
+    split=(${ZK_HOST/\// })
+    ZK_NODES=${split[0]}
+    ZK_CHROOT=${split[1]}
 else
-	# Embedded Zookeeper.
-	# Embedded zk is started when we start solr, so we need to
-	#   give solr a chance to start before we init zk chroot, after
-	#   which we initialize collections.
-	(set -e; sleep 10; ZK=localhost:9983 init_zk; init_collection metric-catalog) &
+    # Embedded Zookeeper.
+    # Use local embedded zk node, use chroot from environment
+    ZK_NODES=localhost:9983
 fi
 
+
+if [ -n "$ZK_CHROOT" ] ; then
+    # zk chroot needs to be initialized
+    if [ -z "$ZK_HOST" ] ; then
+    # No ZK_HOST implies embedded zk; give solr a chance to start, then
+        #  initializ zk chroot and collections
+        (sleep 10; init_zk $ZK_NODES $ZK_CHROOT; init_collection metric-catalog) &
+    else
+        # Initialize zk chroot, give solr a chance to start up,
+        #  then initialize collections as a background process
+        init_zk $ZK_NODES /$ZK_CHROOT
+        (sleep 10; init_collection metric-catalog) &
+    fi
+else
+    # No zk chroot specified; just initialize collections
+    (sleep 10; init_collection metric-catalog) &
+fi  
 
 # Start solr
 exec "$@"
