@@ -1,8 +1,15 @@
-version: "3"
+version: "3.3"
 services:
   solr:
-    image: ${CI_IMAGE:-zenoss/zing-solr:dev}
-    build: .
+    image: ${SERVICE_IMAGE}:${IMAGE_TAG:-dev}
+    build:
+      context: .
+      labels:
+        zenoss.zing.commit-sha: ${COMMIT_SHA:-none}
+        zenoss.zing.pull-request: ${PULL_REQUEST:-none}
+        zenoss.zing.branch_name: ${GIT_BRANCH:-none}
+        zenoss.zing.build_number: ${BUILD_ID:-none}
+        zenoss.zing.build_url: ${BUILD_URL:-none}
     command: init-solr.sh solr start -f -cloud
     environment:
       # ZK_HOST indicates the ZK nodes and optionally chroot

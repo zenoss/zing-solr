@@ -1,25 +1,28 @@
-DOCKERCOMPOSE_RUN_OPTS ?= -d
+DOCKER_COMPOSE       := /usr/local/bin/docker-compose
 
 .PHONY: default
-default: app
+default: run
 
-.PHONY: app
-app:
-	echo "This repo does require building an app"
+.PHONY: docker-compose
+docker-compose: $(DOCKER_COMPOSE)
 
-.PHONY: build
-build:
-	docker-compose build
+$(DOCKER_COMPOSE): DOCKER_COMPOSE_VERSION := 1.14.0
+$(DOCKER_COMPOSE):
+	@if [ ! -w $(@D) ]; then echo 'No docker-compose found. Please run "sudo make docker-compose" to install it.'; exit 2; else true; fi
+	@curl -L https://github.com/docker/compose/releases/download/$(DOCKER_COMPOSE_VERSION)/docker-compose-`uname -s`-`uname -m` > $@
+	@chmod +x $@
 
 .PHONY: run
-run:
-	docker-compose up --build ${DOCKERCOMPOSE_RUN_OPTS}
+run: $(DOCKER_COMPOSE)
+	@$(DOCKER_COMPOSE) up --build
 
-PHONY: ci-push
-ci-push: GIT_COMMIT:=$(shell git rev-parse --short HEAD)
-ci-push: IMAGE:=registry.zing.zenoss.eng/zenoss/zing-solr
-ci-push:
-	CI_IMAGE=${IMAGE}:${GIT_COMMIT} docker-compose build
-	docker tag ${IMAGE}:${GIT_COMMIT} ${IMAGE}:latest
-	docker push ${IMAGE}:${GIT_COMMIT}
-	docker push ${IMAGE}:latest
+.PHONY: test
+test:
+	echo "Not implemented"
+
+.PHONY: clean
+clean:
+	$(DOCKER_COMPOSE) down
+
+.PHONY: mrclean
+mrclean: clean
