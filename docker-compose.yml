@@ -11,6 +11,13 @@ services:
         zenoss.zing.build_number: ${BUILD_ID:-none}
         zenoss.zing.build_url: ${BUILD_URL:-none}
     command: init-solr.sh solr start -f -cloud
+    healthcheck:
+      test: >-
+        curl -s -A 'healthcheck'  http://localhost:8983/solr/metric-catalog/admin/ping?wt=json \
+        | grep -q '"status":"OK"'
+    ports:
+    - 8983:8983 # solr
+    - 9983:9983 # embedded ZK
     environment:
       # ZK_HOST indicates the ZK nodes and optionally chroot
       # If not set, it indicates that embedded ZK should be used.

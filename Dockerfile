@@ -21,8 +21,6 @@ RUN mkdir -p /tmp/solr /opt \
 COPY ./init-solr.sh /usr/local/bin
 COPY ./core-site.xml /opt/solr/server/etc/hadoop/
 
-HEALTHCHECK CMD "curl -A Healthcheck -sI localhost:8983/solr/admin/cores | grep 'HTTP/1.1 200 OK'"
-
 ENV PATH /opt/solr/bin:$PATH
 WORKDIR /opt/solr
 USER $SOLR_USER
