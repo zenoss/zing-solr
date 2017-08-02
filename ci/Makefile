@@ -1,4 +1,3 @@
-include .env
 include Makefile
 
 IMAGE_NAME   := ${SERVICE_IMAGE}:${IMAGE_TAG}
