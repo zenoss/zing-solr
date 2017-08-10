@@ -46,7 +46,7 @@ node('docker') {
                 archiveArtifacts artifacts: 'ci/version.yml'
                 build job: env.GLOBAL_ACCEPTANCE_JOB, parameters: [
                     text(name: 'UPSTREAM_JOB_NAME', value: env.JOB_NAME),
-                    text(name: 'OVERRIDE_BUILD_ID', value:"zing-cassandra PR#${ghprbPullId}")
+                    text(name: 'OVERRIDE_BUILD_ID', value:"zing-solr PR#${ghprbPullId}")
                 ]
             }
         }
