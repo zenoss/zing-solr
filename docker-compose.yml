@@ -25,4 +25,4 @@ services:
       # When using embedded zk, the zk chroot can still be specified
       # via the ZK_CHROOT variable.  Ignored otherwise. 
       - ZK_CHROOT=/solr
-
+      - BOOTSTRAP_SLEEP=10

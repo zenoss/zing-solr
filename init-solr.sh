@@ -54,6 +54,12 @@ init_collection () {
     log INFO "Detected Solr collection \"$COLLECTION\""
 }
 
+# Some service require a delay before they start up in order to allow dependent
+# services to start.
+if [ -n "$BOOTSTRAP_SLEEP" ] ; then
+	log INFO "sleep $BOOTSTRAP_SLEEP"
+	sleep $BOOTSTRAP_SLEEP
+fi
 
 if [ -n "$ZK_HOST" ]; then
     # Stand-alone Zookeeper.
