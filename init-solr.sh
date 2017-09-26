@@ -54,12 +54,17 @@ init_collection () {
     log INFO "Detected Solr collection \"$COLLECTION\""
 }
 
-# Some service require a delay before they start up in order to allow dependent
-# services to start.
-if [ -n "$BOOTSTRAP_SLEEP" ] ; then
-	log INFO "sleep $BOOTSTRAP_SLEEP"
-	sleep $BOOTSTRAP_SLEEP
-fi
+DATA_NODE_QUERY=http://hdfs-namenode:50070/jmx?qry=Hadoop:service=NameNode,name=FSNamesystemState
+log INFO "Wait for HDFS data node count > 0"
+while [ 1 ]; do
+	nodeCount=$(curl -s "$DATA_NODE_QUERY" | jq '.beans[0].NumLiveDataNodes')
+	if [ $nodeCount -ne 0 ]; then
+		break
+	fi
+	sleep 3
+	log INFO "Wait for HDFS data node count > 0"
+done
+log INFO "Found HDFS data node count = $nodeCount"
 
 if [ -n "$ZK_HOST" ]; then
     # Stand-alone Zookeeper.
