@@ -1,6 +1,6 @@
 FROM openjdk:8u131-jre-alpine
 
-RUN apk add --no-cache bash curl lsof wget
+RUN apk add --no-cache bash curl lsof wget jq
 
 ARG SOLR_USER=solr
 ARG SOLR_UID=8983

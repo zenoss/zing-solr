@@ -25,4 +25,22 @@ services:
       # When using embedded zk, the zk chroot can still be specified
       # via the ZK_CHROOT variable.  Ignored otherwise. 
       - ZK_CHROOT=/solr
-      - BOOTSTRAP_SLEEP=10
+  hdfs-datanode:
+    image: registry.zing.zenoss.eng/zenosszing/zing-hdfs
+    command: datanode
+    environment:
+      CLUSTER_NAME: hdfs-namenode
+      CONFIG_TYPE: dev
+    volumes:
+    - hdfs_dn:/data/hdfs/dn:rw
+  hdfs-namenode:
+    image: registry.zing.zenoss.eng/zenosszing/zing-hdfs
+    command: namenode
+    environment:
+      CLUSTER_NAME: hdfs-namenode
+      CONFIG_TYPE: dev
+    volumes:
+    - hdfs_nn:/data/hdfs/nn:rw
+volumes:
+  hdfs_dn: {}
+  hdfs_nn: {}
