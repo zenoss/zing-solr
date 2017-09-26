@@ -58,7 +58,7 @@ DATA_NODE_QUERY=http://hdfs-namenode:50070/jmx?qry=Hadoop:service=NameNode,name=
 log INFO "Wait for HDFS data node count > 0"
 while [ 1 ]; do
 	nodeCount=$(curl -s "$DATA_NODE_QUERY" | jq '.beans[0].NumLiveDataNodes')
-	if [ $nodeCount -ne 0 ]; then
+	if [ ! -z "$nodeCount" ] && [ $nodeCount -ne 0 ]; then
 		break
 	fi
 	sleep 3
