@@ -10,7 +10,7 @@ services:
         zenoss.zing.branch_name: ${GIT_BRANCH:-none}
         zenoss.zing.build_number: ${BUILD_ID:-none}
         zenoss.zing.build_url: ${BUILD_URL:-none}
-    command: init-solr.sh solr start -f -cloud
+    command: init-solr.sh start-solr.sh -verbose -f -cloud
     healthcheck:
       test: >-
         curl -s -A 'healthcheck'  http://localhost:8983/solr/metric-catalog/admin/ping?wt=json \

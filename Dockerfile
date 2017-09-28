@@ -1,6 +1,8 @@
 FROM openjdk:8u131-jre-alpine
 
-RUN apk add --no-cache bash curl lsof wget jq
+# Note that procps is needed for compatibility with how bin/solr expects ps to behave
+# (otherwise, the 'bin/solr stop' command does not work correctly).
+RUN apk add --no-cache bash curl lsof wget jq procps
 
 ARG SOLR_USER=solr
 ARG SOLR_UID=8983
@@ -19,6 +21,7 @@ RUN mkdir -p /tmp/solr /opt \
     && rm -rf /tmp/solr
 
 COPY ./init-solr.sh /usr/local/bin
+COPY ./start-solr.sh /usr/local/bin
 COPY ./core-site.xml /opt/solr/server/etc/hadoop/
 
 ENV PATH /opt/solr/bin:$PATH
